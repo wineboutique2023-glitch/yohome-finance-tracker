@@ -116,7 +116,7 @@
 
     .filter-row {
       display: grid;
-      grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
+      grid-template-columns: 1fr 1fr 1fr 1fr;
       gap: 10px;
       margin-bottom: 12px;
     }
@@ -292,10 +292,6 @@
 
         <div class="filter-row">
           <div>
-            <label>Day</label>
-            <input type="date" id="filterDay" onchange="handleDayFilter()" />
-          </div>
-          <div>
             <label>Week</label>
             <input type="week" id="filterWeek" onchange="handleWeekFilter()" />
           </div>
@@ -444,30 +440,15 @@
       return transactionDate >= selectedWeekStart && transactionDate <= selectedWeekEnd;
     }
 
-    function handleDayFilter() {
-      const day = document.getElementById('filterDay').value;
-      if (day) {
-        document.getElementById('filterWeek').value = '';
-        document.getElementById('filterMonth').value = '';
-      }
-      render();
-    }
-
     function handleWeekFilter() {
       const week = document.getElementById('filterWeek').value;
-      if (week) {
-        document.getElementById('filterDay').value = '';
-        document.getElementById('filterMonth').value = '';
-      }
+      if (week) document.getElementById('filterMonth').value = '';
       render();
     }
 
     function handleMonthFilter() {
       const month = document.getElementById('filterMonth').value;
-      if (month) {
-        document.getElementById('filterDay').value = '';
-        document.getElementById('filterWeek').value = '';
-      }
+      if (month) document.getElementById('filterWeek').value = '';
       render();
     }
 
@@ -558,19 +539,17 @@
     }
 
     function getFilteredTransactions() {
-      const day = document.getElementById('filterDay').value;
       const week = document.getElementById('filterWeek').value;
       const month = document.getElementById('filterMonth').value;
       const type = document.getElementById('filterType').value;
       const category = document.getElementById('filterCategory').value;
 
       return transactions.filter(t => {
-        const dayMatch = !day || t.date === day;
         const weekMatch = !week || isDateInWeek(t.date, week);
         const monthMatch = !month || t.date.slice(0, 7) === month;
         const typeMatch = type === 'all' || t.type === type;
         const categoryMatch = category === 'all' || t.category === category;
-        return dayMatch && weekMatch && monthMatch && typeMatch && categoryMatch;
+        return weekMatch && monthMatch && typeMatch && categoryMatch;
       });
     }
 
@@ -755,15 +734,12 @@
         return;
       }
 
-      const headers = ['Date', 'Type', 'Category', 'Amount', 'GST Included', 'GST Amount', 'Payment Status', 'Account', 'Person/Company', 'Description'];
+      const headers = ['Date', 'Type', 'Category', 'Amount', 'Account', 'Person/Company', 'Description'];
       const rows = transactions.map(t => [
         t.date,
         t.type,
         t.category,
         t.amount,
-        t.gstIncluded,
-        t.gstAmount,
-        t.paymentStatus,
         t.account,
         t.party,
         t.description
