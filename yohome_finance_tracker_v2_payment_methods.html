@@ -1,0 +1,943 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>YOHOME Finance Tracker</title>
+  <style>
+    :root {
+      --bg: #f5f4f1;
+      --card: #ffffff;
+      --text: #242424;
+      --muted: #777;
+      --green: #2f5d50;
+      --brown: #8a6a4f;
+      --red: #b85c5c;
+      --line: #e4e0d8;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    header {
+      background: linear-gradient(135deg, var(--green), var(--brown));
+      color: white;
+      padding: 28px 20px;
+    }
+
+    header h1 {
+      margin: 0 0 6px;
+      font-size: 28px;
+    }
+
+    header p {
+      margin: 0;
+      opacity: 0.9;
+    }
+
+    .container {
+      max-width: 1180px;
+      margin: 24px auto;
+      padding: 0 16px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+      margin-bottom: 18px;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 18px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.04);
+    }
+
+    .summary-title {
+      color: var(--muted);
+      font-size: 13px;
+      margin-bottom: 8px;
+    }
+
+    .summary-value {
+      font-size: 24px;
+      font-weight: bold;
+    }
+
+    .positive { color: var(--green); }
+    .negative { color: var(--red); }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 360px 1fr;
+      gap: 18px;
+    }
+
+    label {
+      display: block;
+      font-size: 13px;
+      color: var(--muted);
+      margin: 12px 0 6px;
+    }
+
+    input, select, textarea, button {
+      width: 100%;
+      padding: 11px 12px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      font-size: 14px;
+      background: white;
+    }
+
+    textarea { resize: vertical; min-height: 66px; }
+
+    button {
+      border: none;
+      cursor: pointer;
+      background: var(--green);
+      color: white;
+      font-weight: bold;
+      margin-top: 14px;
+    }
+
+    button.secondary {
+      background: #ded7ce;
+      color: #333;
+    }
+
+    .filter-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+
+    th, td {
+      padding: 11px 8px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      color: var(--muted);
+      font-size: 12px;
+      text-transform: uppercase;
+    }
+
+    .tag {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: #eee8df;
+      font-size: 12px;
+    }
+
+    .actions button {
+      margin: 2px 0;
+      padding: 7px 9px;
+      background: var(--red);
+      font-size: 12px;
+    }
+
+    .actions .paid-btn {
+      background: var(--green);
+    }
+
+    .category-box {
+      margin-top: 16px;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+    }
+
+    .category-item {
+      background: #faf8f5;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 12px;
+    }
+
+    .category-item strong {
+      display: block;
+      margin-bottom: 6px;
+    }
+
+    @media (max-width: 900px) {
+      .grid { grid-template-columns: repeat(2, 1fr); }
+      .layout { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 560px) {
+      .grid, .filter-row, .category-box { grid-template-columns: 1fr; }
+      header h1 { font-size: 24px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>YOHOME Finance Tracker</h1>
+    <p>Simple income, expense and profit tracking for your business.</p>
+  </header>
+
+  <div class="container">
+    <div class="grid">
+      <div class="card">
+        <div class="summary-title">This Week Income</div>
+        <div class="summary-value positive" id="weekIncome">$0.00</div>
+      </div>
+      <div class="card">
+        <div class="summary-title">This Week Expense</div>
+        <div class="summary-value negative" id="weekExpense">$0.00</div>
+      </div>
+      <div class="card">
+        <div class="summary-title">This Week Profit</div>
+        <div class="summary-value" id="weekProfit">$0.00</div>
+      </div>
+      <div class="card">
+        <div class="summary-title">This Month Profit</div>
+        <div class="summary-value" id="monthProfit">$0.00</div>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <div class="summary-title">This Month Income</div>
+        <div class="summary-value positive" id="monthIncome">$0.00</div>
+      </div>
+      <div class="card">
+        <div class="summary-title">This Month Expense</div>
+        <div class="summary-value negative" id="monthExpense">$0.00</div>
+      </div>
+      <div class="card">
+        <div class="summary-title">GST Payable (Quarter)</div>
+        <div class="summary-value" id="gstPayable">$0.00</div>
+      </div>
+      <div class="card">
+        <div class="summary-title">Year Profit</div>
+        <div class="summary-value" id="yearProfit">$0.00</div>
+      </div>
+    </div>
+
+    <div class="layout">
+      <div class="card">
+        <h2>Add Transaction</h2>
+
+        <label>Date</label>
+        <input type="date" id="date" />
+
+        <label>Type</label>
+        <select id="type">
+          <option value="income">Income</option>
+          <option value="expense">Expense</option>
+        </select>
+
+        <label>Category</label>
+        <select id="category"></select>
+
+        <label>Amount (GST Included)</label>
+        <input type="number" id="amount" placeholder="e.g. 120" step="0.01" />
+
+        <label>GST Included?</label>
+        <select id="gstIncluded">
+          <option value="yes">Yes</option>
+          <option value="no">No</option>
+        </select>
+
+        <label>Payment Status</label>
+        <select id="paymentStatus">
+          <option value="paid">Paid</option>
+          <option value="pending">Pending</option>
+          <option value="overdue">Overdue</option>
+        </select>
+
+        <label>Account</label>
+        <select id="account">
+          <option>Cash</option>
+          <option>Bank Account</option>
+          <option>Credit Card</option>
+          <option>WeChat</option>
+          <option>Alipay</option>
+          <option>Other</option>
+        </select>
+
+        <label>Person / Company</label>
+        <input type="text" id="party" placeholder="e.g. Client A, landlord, supplier" />
+
+        <label>Description</label>
+        <textarea id="description" placeholder="e.g. May rent, treatment income, towels, Google Ads"></textarea>
+
+        <button onclick="addTransaction()">Save Transaction</button>
+        <button class="secondary" onclick="exportCSV()">Export CSV Backup</button>
+        <button class="secondary" onclick="exportJSON()">Export JSON Backup</button>
+        <button class="secondary" onclick="document.getElementById('importJsonFile').click()">Import JSON Backup</button>
+        <input type="file" id="importJsonFile" accept="application/json" style="display:none" onchange="importJSON(event)" />
+        <button class="secondary" onclick="exportPDF()">Export PDF Report</button>
+      </div>
+
+      <div class="card">
+        <h2>Reports & Transaction List</h2>
+
+        <div class="filter-row">
+          <div>
+            <label>Day</label>
+            <input type="date" id="filterDay" onchange="handleDayFilter()" />
+          </div>
+          <div>
+            <label>Week</label>
+            <input type="week" id="filterWeek" onchange="handleWeekFilter()" />
+          </div>
+          <div>
+            <label>Month</label>
+            <input type="month" id="filterMonth" onchange="handleMonthFilter()" />
+          </div>
+          <div>
+            <label>Type</label>
+            <select id="filterType" onchange="render()">
+              <option value="all">All</option>
+              <option value="income">Income</option>
+              <option value="expense">Expense</option>
+            </select>
+          </div>
+          <div>
+            <label>Category</label>
+            <select id="filterCategory" onchange="render()">
+              <option value="all">All</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid" style="grid-template-columns: repeat(4, 1fr); margin-top: 14px;">
+          <div class="card" style="box-shadow:none;">
+            <div class="summary-title">Selected Period Income</div>
+            <div class="summary-value positive" id="periodIncome">$0.00</div>
+          </div>
+          <div class="card" style="box-shadow:none;">
+            <div class="summary-title">Selected Period Expense</div>
+            <div class="summary-value negative" id="periodExpense">$0.00</div>
+          </div>
+          <div class="card" style="box-shadow:none;">
+            <div class="summary-title">Selected Period Profit</div>
+            <div class="summary-value" id="periodProfit">$0.00</div>
+          </div>
+          <div class="card" style="box-shadow:none;">
+            <div class="summary-title">Outstanding Amount</div>
+            <div class="summary-value negative" id="outstandingAmount">$0.00</div>
+          </div>
+        </div>
+
+        <h3>Payment Method Summary</h3>
+        <div class="category-box" id="paymentMethodSummary"></div>
+
+        <h3>Daily / Selected Period Close Report</h3>
+        <div class="category-box">
+          <div class="category-item">
+            <strong>Cash Received</strong>
+            <span id="closeCash">$0.00</span>
+          </div>
+          <div class="category-item">
+            <strong>Card Received</strong>
+            <span id="closeCard">$0.00</span>
+          </div>
+          <div class="category-item">
+            <strong>Bank Received</strong>
+            <span id="closeBank">$0.00</span>
+          </div>
+          <div class="category-item">
+            <strong>Total Paid Income</strong>
+            <span id="closePaidIncome">$0.00</span>
+          </div>
+          <div class="category-item">
+            <strong>Transaction Count</strong>
+            <span id="closeTransactionCount">0</span>
+          </div>
+          <div class="category-item">
+            <strong>Outstanding Income</strong>
+            <span id="closeOutstandingIncome">$0.00</span>
+          </div>
+        </div>
+
+        <h3>Expense by Category</h3>
+        <div class="category-box" id="categorySummary"></div>
+
+        <h3>Transaction Details</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Type</th>
+              <th>Category</th>
+              <th>Amount</th>
+              <th>Status</th>
+              <th>GST</th>
+              <th>Account</th>
+              <th>Description</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="transactionTable"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script>
+    const incomeCategories = [
+      'Main Business Income',
+      'Side Business Income',
+      'Salary',
+      'Bonus',
+      'Investment Income',
+      'Gift / Red Packet',
+      'Other Income'
+    ];
+
+    const expenseCategories = [
+      'Rent / Mortgage',
+      'Utilities',
+      'Phone / Internet',
+      'Wages / Super',
+      'Food',
+      'Shopping',
+      'Transport',
+      'Daily Supplies',
+      'Entertainment',
+      'Medical',
+      'Stock Purchase',
+      'Clinic Supplies',
+      'Freight',
+      'Service Fee',
+      'Accounting Fee',
+      'Marketing / Ads',
+      'Investment Expense',
+      'Other Expense'
+    ];
+
+    let transactions = JSON.parse(localStorage.getItem('yohomeFinanceTransactions')) || [];
+
+    function money(value) {
+      return '$' + Number(value || 0).toLocaleString(undefined, {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      });
+    }
+
+    function todayISO() {
+      return new Date().toISOString().split('T')[0];
+    }
+
+    function currentMonth() {
+      return new Date().toISOString().slice(0, 7);
+    }
+
+    function getWeekStart(dateString) {
+      const date = new Date(dateString + 'T00:00:00');
+      const day = date.getDay();
+      const diff = day === 0 ? -6 : 1 - day;
+      date.setDate(date.getDate() + diff);
+      date.setHours(0, 0, 0, 0);
+      return date;
+    }
+
+    function getWeekEnd(dateString) {
+      const start = getWeekStart(dateString);
+      const end = new Date(start);
+      end.setDate(start.getDate() + 6);
+      end.setHours(23, 59, 59, 999);
+      return end;
+    }
+
+    function isDateInWeek(dateString, weekValue) {
+      if (!weekValue) return true;
+      const [year, weekText] = weekValue.split('-W');
+      const week = Number(weekText);
+      const jan4 = new Date(Number(year), 0, 4);
+      const week1Start = getWeekStart(jan4.toISOString().slice(0, 10));
+      const selectedWeekStart = new Date(week1Start);
+      selectedWeekStart.setDate(week1Start.getDate() + (week - 1) * 7);
+      const selectedWeekEnd = new Date(selectedWeekStart);
+      selectedWeekEnd.setDate(selectedWeekStart.getDate() + 6);
+      selectedWeekEnd.setHours(23, 59, 59, 999);
+      const transactionDate = new Date(dateString + 'T00:00:00');
+      return transactionDate >= selectedWeekStart && transactionDate <= selectedWeekEnd;
+    }
+
+    function handleDayFilter() {
+      const day = document.getElementById('filterDay').value;
+      if (day) {
+        document.getElementById('filterWeek').value = '';
+        document.getElementById('filterMonth').value = '';
+      }
+      render();
+    }
+
+    function handleWeekFilter() {
+      const week = document.getElementById('filterWeek').value;
+      if (week) {
+        document.getElementById('filterDay').value = '';
+        document.getElementById('filterMonth').value = '';
+      }
+      render();
+    }
+
+    function handleMonthFilter() {
+      const month = document.getElementById('filterMonth').value;
+      if (month) {
+        document.getElementById('filterDay').value = '';
+        document.getElementById('filterWeek').value = '';
+      }
+      render();
+    }
+
+    function saveData() {
+      localStorage.setItem('yohomeFinanceTransactions', JSON.stringify(transactions));
+    }
+
+    function updateCategoryOptions() {
+      const type = document.getElementById('type').value;
+      const categorySelect = document.getElementById('category');
+      const categories = type === 'income' ? incomeCategories : expenseCategories;
+      categorySelect.innerHTML = categories.map(c => `<option>${c}</option>`).join('');
+    }
+
+    function setupFilterCategories() {
+      const filterCategory = document.getElementById('filterCategory');
+      const allCategories = [...incomeCategories, ...expenseCategories];
+      filterCategory.innerHTML = '<option value="all">All</option>' + allCategories.map(c => `<option>${c}</option>`).join('');
+    }
+
+    function addTransaction() {
+      const date = document.getElementById('date').value;
+      const type = document.getElementById('type').value;
+      const category = document.getElementById('category').value;
+      const amount = Number(document.getElementById('amount').value);
+      const account = document.getElementById('account').value;
+      const party = document.getElementById('party').value.trim();
+      const description = document.getElementById('description').value.trim();
+
+      if (!date || !amount || amount <= 0) {
+        alert('Please enter date and valid amount.');
+        return;
+      }
+
+      const gstIncluded = document.getElementById('gstIncluded').value;
+      const paymentStatus = document.getElementById('paymentStatus').value;
+
+      const gstAmount = gstIncluded === 'yes' ? amount / 11 : 0;
+      const netAmount = amount - gstAmount;
+
+      transactions.push({
+        id: Date.now(),
+        date,
+        type,
+        category,
+        amount,
+        netAmount,
+        gstAmount,
+        gstIncluded,
+        paymentStatus,
+        account,
+        party,
+        description
+      });
+
+      saveData();
+      document.getElementById('amount').value = '';
+      document.getElementById('party').value = '';
+      document.getElementById('description').value = '';
+      render();
+    }
+
+    function markAsPaid(id) {
+      transactions = transactions.map(t => {
+        if (t.id === id) {
+          return {
+            ...t,
+            paymentStatus: 'paid'
+          };
+        }
+        return t;
+      });
+
+      saveData();
+      render();
+    }
+
+    function deleteTransaction(id) {
+      if (!confirm('Delete this transaction?')) return;
+      transactions = transactions.filter(t => t.id !== id);
+      saveData();
+      render();
+    }
+
+    function getQuarter(dateString) {
+      const month = Number(dateString.slice(5, 7));
+      return Math.ceil(month / 3);
+    }
+
+    function getFilteredTransactions() {
+      const day = document.getElementById('filterDay').value;
+      const week = document.getElementById('filterWeek').value;
+      const month = document.getElementById('filterMonth').value;
+      const type = document.getElementById('filterType').value;
+      const category = document.getElementById('filterCategory').value;
+
+      return transactions.filter(t => {
+        const dayMatch = !day || t.date === day;
+        const weekMatch = !week || isDateInWeek(t.date, week);
+        const monthMatch = !month || t.date.slice(0, 7) === month;
+        const typeMatch = type === 'all' || t.type === type;
+        const categoryMatch = category === 'all' || t.category === category;
+        return dayMatch && weekMatch && monthMatch && typeMatch && categoryMatch;
+      });
+    }
+
+    function sum(list, type) {
+      return list
+        .filter(t => t.type === type)
+        .reduce((total, t) => total + Number(t.amount), 0);
+    }
+
+    function getPaymentGroup(account) {
+      if (account === 'Cash') return 'Cash';
+      if (account === 'Credit Card') return 'Card';
+      if (account === 'Bank Account') return 'Bank';
+      return 'Other';
+    }
+
+    function getPaidIncomeList(list) {
+      return list.filter(t => t.type === 'income' && (t.paymentStatus || 'paid') === 'paid');
+    }
+
+    function sumByPaymentGroup(list, groupName) {
+      return getPaidIncomeList(list)
+        .filter(t => getPaymentGroup(t.account) === groupName)
+        .reduce((total, t) => total + Number(t.amount), 0);
+    }
+
+    function renderSummary() {
+      const now = new Date();
+      const thisMonth = currentMonth();
+      const thisYear = String(now.getFullYear());
+      const thisQuarter = Math.ceil((now.getMonth() + 1) / 3);
+
+      const today = todayISO();
+      const weekStart = getWeekStart(today);
+      const weekEnd = getWeekEnd(today);
+      const weekList = transactions.filter(t => {
+        const transactionDate = new Date(t.date + 'T00:00:00');
+        return transactionDate >= weekStart && transactionDate <= weekEnd;
+      });
+      const monthList = transactions.filter(t => t.date.slice(0, 7) === thisMonth);
+      const quarterList = transactions.filter(t => t.date.slice(0, 4) === thisYear && getQuarter(t.date) === thisQuarter);
+      const yearList = transactions.filter(t => t.date.slice(0, 4) === thisYear);
+
+      const weekIncome = sum(weekList, 'income');
+      const weekExpense = sum(weekList, 'expense');
+      const weekProfit = weekIncome - weekExpense;
+      const monthIncome = sum(monthList, 'income');
+      const monthExpense = sum(monthList, 'expense');
+      const monthProfit = monthIncome - monthExpense;
+      const quarterProfit = sum(quarterList, 'income') - sum(quarterList, 'expense');
+      const yearProfit = sum(yearList, 'income') - sum(yearList, 'expense');
+
+      document.getElementById('weekIncome').textContent = money(weekIncome);
+      document.getElementById('weekExpense').textContent = money(weekExpense);
+      document.getElementById('weekProfit').textContent = money(weekProfit);
+      document.getElementById('weekProfit').className = 'summary-value ' + (weekProfit >= 0 ? 'positive' : 'negative');
+      document.getElementById('monthIncome').textContent = money(monthIncome);
+      document.getElementById('monthExpense').textContent = money(monthExpense);
+      document.getElementById('monthProfit').textContent = money(monthProfit);
+      document.getElementById('monthProfit').className = 'summary-value ' + (monthProfit >= 0 ? 'positive' : 'negative');
+      document.getElementById('gstPayable').textContent = money(quarterProfit);
+      document.getElementById('gstPayable').className = 'summary-value ' + (quarterProfit >= 0 ? 'negative' : 'positive');
+      document.getElementById('yearProfit').textContent = money(yearProfit);
+      document.getElementById('yearProfit').className = 'summary-value ' + (yearProfit >= 0 ? 'positive' : 'negative');
+    }
+
+    function renderPeriodReport() {
+      const list = getFilteredTransactions();
+      const income = sum(list, 'income');
+      const expense = sum(list, 'expense');
+      const profit = income - expense;
+
+      const outstanding = list
+        .filter(t => t.paymentStatus === 'pending' || t.paymentStatus === 'overdue')
+        .reduce((total, t) => total + Number(t.amount), 0);
+
+      const gstCollected = list
+        .filter(t => t.type === 'income')
+        .reduce((total, t) => total + Number(t.gstAmount || 0), 0);
+
+      const gstCredit = list
+        .filter(t => t.type === 'expense')
+        .reduce((total, t) => total + Number(t.gstAmount || 0), 0);
+
+      const gstPayable = gstCollected - gstCredit;
+
+      document.getElementById('periodIncome').textContent = money(income);
+      document.getElementById('periodExpense').textContent = money(expense);
+      document.getElementById('periodProfit').textContent = money(profit);
+      document.getElementById('periodProfit').className = 'summary-value ' + (profit >= 0 ? 'positive' : 'negative');
+      document.getElementById('outstandingAmount').textContent = money(outstanding);
+      document.getElementById('gstPayable').textContent = money(gstPayable);
+      document.getElementById('gstPayable').className = 'summary-value ' + (gstPayable >= 0 ? 'negative' : 'positive');
+
+      renderPaymentMethodSummary(list);
+
+      const expenseList = list.filter(t => t.type === 'expense');
+      const grouped = {};
+      expenseList.forEach(t => grouped[t.category] = (grouped[t.category] || 0) + Number(t.amount));
+
+      const html = Object.entries(grouped)
+        .sort((a, b) => b[1] - a[1])
+        .map(([category, amount]) => {
+          const percent = expense ? ((amount / expense) * 100).toFixed(1) : 0;
+          return `<div class="category-item"><strong>${category}</strong>${money(amount)} <span class="tag">${percent}%</span></div>`;
+        }).join('');
+
+      document.getElementById('categorySummary').innerHTML = html || '<p style="color:#777;">No expense data for selected period.</p>';
+    }
+
+    function renderPaymentMethodSummary(list) {
+      const paidIncomeList = getPaidIncomeList(list);
+      const totalPaidIncome = paidIncomeList.reduce((total, t) => total + Number(t.amount), 0);
+
+      const paymentGroups = ['Cash', 'Card', 'Bank', 'Other'];
+      const html = paymentGroups.map(group => {
+        const amount = sumByPaymentGroup(list, group);
+        const percent = totalPaidIncome ? ((amount / totalPaidIncome) * 100).toFixed(1) : 0;
+        return `<div class="category-item"><strong>${group}</strong>${money(amount)} <span class="tag">${percent}%</span></div>`;
+      }).join('');
+
+      document.getElementById('paymentMethodSummary').innerHTML = html;
+
+      const cash = sumByPaymentGroup(list, 'Cash');
+      const card = sumByPaymentGroup(list, 'Card');
+      const bank = sumByPaymentGroup(list, 'Bank');
+      const outstandingIncome = list
+        .filter(t => t.type === 'income' && (t.paymentStatus === 'pending' || t.paymentStatus === 'overdue'))
+        .reduce((total, t) => total + Number(t.amount), 0);
+
+      document.getElementById('closeCash').textContent = money(cash);
+      document.getElementById('closeCard').textContent = money(card);
+      document.getElementById('closeBank').textContent = money(bank);
+      document.getElementById('closePaidIncome').textContent = money(totalPaidIncome);
+      document.getElementById('closeTransactionCount').textContent = list.length;
+      document.getElementById('closeOutstandingIncome').textContent = money(outstandingIncome);
+    }
+
+    function renderTable() {
+      const list = getFilteredTransactions().sort((a, b) => b.date.localeCompare(a.date));
+      const tbody = document.getElementById('transactionTable');
+
+      tbody.innerHTML = list.map(t => `
+        <tr>
+          <td>${t.date}</td>
+          <td><span class="tag">${t.type}</span></td>
+          <td>${t.category}</td>
+          <td class="${t.type === 'income' ? 'positive' : 'negative'}">${t.type === 'income' ? '+' : '-'}${money(t.amount)}</td>
+          <td><span class="tag">${t.paymentStatus || 'paid'}</span></td>
+          <td>${money(t.gstAmount || 0)}</td>
+          <td>${t.account}<br><small>${t.party || ''}</small></td>
+          <td>${t.description || ''}</td>
+          <td class="actions">
+            ${t.paymentStatus !== 'paid' ? `<button class="paid-btn" onclick="markAsPaid(${t.id})">Mark Paid</button>` : ''}
+            <button onclick="deleteTransaction(${t.id})">Delete</button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    async function exportPDF() {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+
+      const list = getFilteredTransactions();
+      const income = sum(list, 'income');
+      const expense = sum(list, 'expense');
+      const profit = income - expense;
+
+      const outstanding = list
+        .filter(t => t.paymentStatus === 'pending' || t.paymentStatus === 'overdue')
+        .reduce((total, t) => total + Number(t.amount), 0);
+
+      const gstCollected = list
+        .filter(t => t.type === 'income')
+        .reduce((total, t) => total + Number(t.gstAmount || 0), 0);
+
+      const gstCredit = list
+        .filter(t => t.type === 'expense')
+        .reduce((total, t) => total + Number(t.gstAmount || 0), 0);
+
+      const gstPayable = gstCollected - gstCredit;
+
+      doc.setFontSize(20);
+      doc.text('YOHOME Finance Report', 20, 20);
+
+      doc.setFontSize(11);
+      doc.text(`Generated: ${new Date().toLocaleString()}`, 20, 30);
+
+      doc.setFontSize(14);
+      doc.text('Financial Summary', 20, 45);
+
+      doc.setFontSize(11);
+      doc.text(`Income: ${money(income)}`, 20, 55);
+      doc.text(`Expense: ${money(expense)}`, 20, 63);
+      doc.text(`Profit: ${money(profit)}`, 20, 71);
+      doc.text(`Outstanding: ${money(outstanding)}`, 20, 79);
+      doc.text(`GST Collected: ${money(gstCollected)}`, 20, 87);
+      doc.text(`GST Credit: ${money(gstCredit)}`, 20, 95);
+      doc.text(`GST Payable: ${money(gstPayable)}`, 20, 103);
+
+      const cash = sumByPaymentGroup(list, 'Cash');
+      const card = sumByPaymentGroup(list, 'Card');
+      const bank = sumByPaymentGroup(list, 'Bank');
+      const other = sumByPaymentGroup(list, 'Other');
+
+      doc.setFontSize(14);
+      doc.text('Payment Method Summary', 20, 120);
+      doc.setFontSize(11);
+      doc.text(`Cash: ${money(cash)}`, 20, 130);
+      doc.text(`Card: ${money(card)}`, 20, 138);
+      doc.text(`Bank: ${money(bank)}`, 20, 146);
+      doc.text(`Other: ${money(other)}`, 20, 154);
+
+      doc.setFontSize(14);
+      doc.text('Transaction Details', 20, 170);
+
+      let y = 180;
+
+      list.forEach((t, index) => {
+        if (y > 270) {
+          doc.addPage();
+          y = 20;
+        }
+
+        doc.setFontSize(10);
+        doc.text(
+          `${index + 1}. ${t.date} | ${t.type.toUpperCase()} | ${t.category} | ${money(t.amount)} | ${t.paymentStatus}`,
+          20,
+          y
+        );
+
+        y += 8;
+      });
+
+      doc.save('yohome-finance-report.pdf');
+    }
+
+    function exportJSON() {
+      const backup = {
+        app: 'YOHOME Finance Tracker',
+        version: 'v2-payment-method-summary',
+        exportedAt: new Date().toISOString(),
+        transactions
+      };
+
+      const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `yohome-finance-backup-${todayISO()}.json`;
+      link.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function importJSON(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const data = JSON.parse(e.target.result);
+          const importedTransactions = Array.isArray(data) ? data : data.transactions;
+
+          if (!Array.isArray(importedTransactions)) {
+            alert('Invalid backup file.');
+            return;
+          }
+
+          const confirmImport = confirm('Import backup? This will replace the current records in this browser.');
+          if (!confirmImport) return;
+
+          transactions = importedTransactions;
+          saveData();
+          render();
+          alert('Backup imported successfully.');
+        } catch (error) {
+          alert('Could not import this JSON file.');
+        } finally {
+          event.target.value = '';
+        }
+      };
+
+      reader.readAsText(file);
+    }
+
+    function exportCSV() {
+      if (!transactions.length) {
+        alert('No data to export.');
+        return;
+      }
+
+      const headers = ['Date', 'Type', 'Category', 'Amount', 'GST Included', 'GST Amount', 'Payment Status', 'Account', 'Payment Group', 'Person/Company', 'Description'];
+      const rows = transactions.map(t => [
+        t.date,
+        t.type,
+        t.category,
+        t.amount,
+        t.gstIncluded,
+        t.gstAmount,
+        t.paymentStatus,
+        t.account,
+        getPaymentGroup(t.account),
+        t.party,
+        t.description
+      ]);
+
+      const csv = [headers, ...rows]
+        .map(row => row.map(value => `"${String(value || '').replaceAll('"', '""')}"`).join(','))
+        .join('\n');
+
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'yohome-finance-backup.csv';
+      link.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function render() {
+      renderSummary();
+      renderPeriodReport();
+      renderTable();
+    }
+
+    document.getElementById('date').value = todayISO();
+    document.getElementById('filterMonth').value = currentMonth();
+    document.getElementById('type').addEventListener('change', updateCategoryOptions);
+    updateCategoryOptions();
+    setupFilterCategories();
+    render();
+  </script>
+</body>
+</html>
