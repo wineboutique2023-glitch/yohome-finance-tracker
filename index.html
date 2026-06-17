@@ -168,6 +168,66 @@
       background: var(--green);
     }
 
+    .actions .edit-btn {
+      background: var(--brown);
+    }
+
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.45);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      padding: 18px;
+    }
+
+    .modal-overlay.show {
+      display: flex;
+    }
+
+    .modal {
+      background: var(--card);
+      width: min(720px, 100%);
+      max-height: 90vh;
+      overflow: auto;
+      border-radius: 18px;
+      padding: 22px;
+      box-shadow: 0 18px 50px rgba(0,0,0,0.22);
+    }
+
+    .modal h2 {
+      margin-top: 0;
+    }
+
+    .modal-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .modal-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .modal-actions button {
+      margin-top: 0;
+    }
+
+    .danger-note {
+      color: var(--red);
+      font-size: 13px;
+      margin-top: 8px;
+    }
+
+    @media (max-width: 560px) {
+      .modal-grid, .modal-actions { grid-template-columns: 1fr; }
+    }
+
     .category-box {
       margin-top: 16px;
       display: grid;
@@ -402,6 +462,87 @@
           </thead>
           <tbody id="transactionTable"></tbody>
         </table>
+      </div>
+    </div>
+  </div>
+
+
+  <div class="modal-overlay" id="editModal">
+    <div class="modal">
+      <h2>Edit Transaction</h2>
+      <p style="color:#777;margin-top:-6px;">Update date, amount, payment status, account or description. Changes save to Supabase cloud.</p>
+
+      <input type="hidden" id="editId" />
+
+      <div class="modal-grid">
+        <div>
+          <label>Edit Date</label>
+          <input type="date" id="editDate" />
+        </div>
+
+        <div>
+          <label>Edit Type</label>
+          <select id="editType" onchange="updateEditCategoryOptions()">
+            <option value="income">Income</option>
+            <option value="expense">Expense</option>
+          </select>
+        </div>
+
+        <div>
+          <label>Edit Category</label>
+          <select id="editCategory"></select>
+        </div>
+
+        <div>
+          <label>Edit Amount (GST Included)</label>
+          <input type="number" id="editAmount" step="0.01" />
+        </div>
+
+        <div>
+          <label>GST Included?</label>
+          <select id="editGstIncluded">
+            <option value="yes">Yes</option>
+            <option value="no">No</option>
+          </select>
+        </div>
+
+        <div>
+          <label>Payment Status</label>
+          <select id="editPaymentStatus">
+            <option value="paid">Paid</option>
+            <option value="pending">Pending</option>
+            <option value="overdue">Overdue</option>
+          </select>
+        </div>
+
+        <div>
+          <label>Account</label>
+          <select id="editAccount">
+            <option>Cash</option>
+            <option>Bank Account</option>
+            <option>Credit Card</option>
+            <option>WeChat</option>
+            <option>Alipay</option>
+            <option>Other</option>
+          </select>
+        </div>
+
+        <div>
+          <label>Person / Company</label>
+          <input type="text" id="editParty" />
+        </div>
+      </div>
+
+      <label>Description</label>
+      <textarea id="editDescription"></textarea>
+
+      <div class="modal-actions">
+        <button onclick="saveEditTransaction()">Save Changes</button>
+        <button class="secondary" onclick="closeEditModal()">Cancel</button>
+      </div>
+
+      <div class="danger-note">
+        Tip: Edit updates the existing Supabase record. Delete permanently removes the record from Supabase.
       </div>
     </div>
   </div>
@@ -890,12 +1031,115 @@
           <td>${t.account}<br><small>${t.party || ''}</small></td>
           <td>${t.description || ''}</td>
           <td class="actions">
-            ${t.paymentStatus !== 'paid' ? `<button class="paid-btn" onclick="markAsPaid(${t.id})">Mark Paid</button>` : ''}
-            <button onclick="deleteTransaction(${t.id})">Delete</button>
+            <button class="edit-btn" onclick='openEditTransaction(${JSON.stringify(t.id)})'>Edit</button>
+            ${t.paymentStatus !== 'paid' ? `<button class="paid-btn" onclick='markAsPaid(${JSON.stringify(t.id)})'>Mark Paid</button>` : ''}
+            <button onclick='deleteTransaction(${JSON.stringify(t.id)})'>Delete</button>
           </td>
         </tr>
       `).join('');
     }
+
+
+    function updateEditCategoryOptions(selectedCategory = '') {
+      const type = document.getElementById('editType').value;
+      const categorySelect = document.getElementById('editCategory');
+      const categories = type === 'income' ? incomeCategories : expenseCategories;
+
+      categorySelect.innerHTML = categories.map(c => `<option>${c}</option>`).join('');
+
+      if (selectedCategory && categories.includes(selectedCategory)) {
+        categorySelect.value = selectedCategory;
+      }
+    }
+
+    function openEditTransaction(id) {
+      const t = transactions.find(item => String(item.id) === String(id));
+
+      if (!t) {
+        alert('Could not find this transaction.');
+        return;
+      }
+
+      document.getElementById('editId').value = t.id;
+      document.getElementById('editDate').value = t.date;
+      document.getElementById('editType').value = t.type;
+      updateEditCategoryOptions(t.category);
+      document.getElementById('editAmount').value = t.amount;
+      document.getElementById('editGstIncluded').value = t.gstIncluded || 'yes';
+      document.getElementById('editPaymentStatus').value = t.paymentStatus || 'paid';
+      document.getElementById('editAccount').value = t.account || 'Other';
+      document.getElementById('editParty').value = t.party || '';
+      document.getElementById('editDescription').value = t.description || '';
+
+      document.getElementById('editModal').classList.add('show');
+    }
+
+    function closeEditModal() {
+      document.getElementById('editModal').classList.remove('show');
+    }
+
+    async function saveEditTransaction() {
+      const id = document.getElementById('editId').value;
+      const date = document.getElementById('editDate').value;
+      const type = document.getElementById('editType').value;
+      const category = document.getElementById('editCategory').value;
+      const amount = Number(document.getElementById('editAmount').value);
+      const gstIncluded = document.getElementById('editGstIncluded').value;
+      const paymentStatus = document.getElementById('editPaymentStatus').value;
+      const account = document.getElementById('editAccount').value;
+      const party = document.getElementById('editParty').value.trim();
+      const description = document.getElementById('editDescription').value.trim();
+
+      if (!id) {
+        alert('Missing transaction ID.');
+        return;
+      }
+
+      if (!date || !amount || amount <= 0) {
+        alert('Please enter a valid date and amount.');
+        return;
+      }
+
+      const gstAmount = gstIncluded === 'yes' ? amount / 11 : 0;
+      const netAmount = amount - gstAmount;
+
+      try {
+        setConnectionStatus('Saving changes to Supabase...');
+
+        const { data, error } = await supabaseClient
+          .from(TABLE_NAME)
+          .update({
+            transaction_date: date,
+            type,
+            category,
+            amount,
+            net_amount: netAmount,
+            gst_amount: gstAmount,
+            gst_included: gstIncluded === 'yes',
+            payment_status: paymentStatus,
+            account,
+            party,
+            description
+          })
+          .eq('id', id)
+          .select()
+          .single();
+
+        if (error) throw error;
+
+        const updated = fromDb(data);
+        transactions = transactions.map(t => String(t.id) === String(id) ? updated : t);
+
+        closeEditModal();
+        setConnectionStatus('Transaction updated successfully');
+        render();
+      } catch (error) {
+        console.error(error);
+        alert('Could not update transaction: ' + error.message);
+        setConnectionStatus('Update error: ' + error.message, true);
+      }
+    }
+
 
     async function exportPDF() {
       const { jsPDF } = window.jspdf;
@@ -999,15 +1243,21 @@
       const reader = new FileReader();
       reader.onload = async function(e) {
         try {
-          const data = JSON.parse(e.target.result);
+          let data = JSON.parse(e.target.result);
+
+          // Some backups are saved as a JSON string that itself contains JSON.
+          if (typeof data === 'string') {
+            data = JSON.parse(data);
+          }
+
           const importedTransactions = Array.isArray(data) ? data : data.transactions;
 
           if (!Array.isArray(importedTransactions)) {
-            alert('Invalid backup file.');
+            alert('Invalid backup file. Please choose a JSON file containing an array of transactions.');
             return;
           }
 
-          const confirmImport = confirm('Import backup to Supabase? This will add these records to the cloud database.');
+          const confirmImport = confirm(`Import ${importedTransactions.length} records to Supabase? This will add these records to the cloud database.`);
           if (!confirmImport) return;
 
           const rows = importedTransactions.map(toDb);
@@ -1034,7 +1284,7 @@
         return;
       }
 
-      const headers = ['Date', 'Type', 'Category', 'Amount', 'GST Included', 'GST Amount', 'Payment Status', 'Account', 'Person/Company', 'Description'];
+      const headers = ['Date', 'Type', 'Category', 'Amount', 'GST Included', 'GST Amount', 'Payment Status', 'Account', 'Payment Group', 'Person/Company', 'Description'];
       const rows = transactions.map(t => [
         t.date,
         t.type,
@@ -1044,6 +1294,7 @@
         t.gstAmount,
         t.paymentStatus,
         t.account,
+        getPaymentGroup(t.account),
         t.party,
         t.description
       ]);
@@ -1066,6 +1317,10 @@
       renderPeriodReport();
       renderTable();
     }
+
+    document.getElementById('editModal').addEventListener('click', function(event) {
+      if (event.target.id === 'editModal') closeEditModal();
+    });
 
     document.getElementById('date').value = todayISO();
     document.getElementById('filterMonth').value = currentMonth();
